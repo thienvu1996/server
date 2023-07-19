@@ -12,7 +12,7 @@ export const BookingSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         enum: {
-            values: [0, 1],
+            values: [-1,0, 1],
             message: '{VALUE} is not supported'
         },
     },

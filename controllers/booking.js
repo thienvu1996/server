@@ -48,9 +48,7 @@ export async function deleteBooking(req, res) {
         const deleteBooking = await BookingModel.deleteOne({ _id: id })
         const updateGrade = await GradeModel.findById(booking.grade.toString());
         const updateUser = await UserModel.findById(booking.user.toString())
-        console.log(updateGrade);
         updateGrade.nOfStudent = updateGrade.nOfStudent - 1;
-        console.log(updateGrade);
         updateUser.grade = null;
         console.log(updateUser)
         await updateGrade.save();
@@ -90,4 +88,59 @@ export async function updateBooking(req, res) {
         })
     }
 
+}
+export async function rejectBooking(req, res) {
+    const id = req.params.id
+
+    try {
+
+        const updateBooking = await BookingModel.findById(id);
+        updateBooking.isAccepted = -1;
+        await updateBooking.save();
+        res.status(200).json({
+            msg: 'Update Success'
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: 'Cannot update'
+        })
+    }
+
+}
+export async function getAcceptedBookings(req, res) {
+    try {
+        const allBookings = await BookingModel.find({isAccepted : 1})
+        res.status(200).json(
+            allBookings
+        )
+    } catch (error) {
+        res.status(500).json({
+            msg: 'Failed'
+        })
+    }
+}
+export async function getRejectedBookings(req, res) {
+    try {
+        const allBookings = await BookingModel.find({isAccepted : -1})
+        res.status(200).json(
+            allBookings
+        )
+    } catch (error) {
+        res.status(500).json({
+            msg: 'Failed'
+        })
+    }
+}
+export async function getWaitingBookings(req, res) {
+    try {
+        const allBookings = await BookingModel.find({isAccepted : 0})
+        res.status(200).json(
+            allBookings
+        )
+    } catch (error) {
+        res.status(500).json({
+            msg: 'Failed'
+        })
+    }
 }

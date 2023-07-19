@@ -16,6 +16,8 @@ router.route('/login').post(controller.verifyUser,controller.login); // login in
 router.route('/recoveryUser').get(controller.verifyUser,controller.recoveryUser); // login in app
 router.route('/getAll').get(controller.getAllUser);
 router.route('/studentInGrade/:gradeId').get(controller.studentInGrade); // cai nay moi' ne`
+router.route('/disableUser/:id').post(controller.disableUser); // cai nay moi' ne`
+router.route('/ableUser/:id').post(controller.ableUser); // cai nay moi' ne`
 
 /** GET Methods */
 router.route('/user/:username').get(controller.getUser) // user with username

@@ -77,7 +77,7 @@ export async function register(req, res) {
                                 password: hashedPassword,
                                 profile: profile || '',
                                 email,
-                                role: 1,
+                                roleId: 1,
                                 isActive: 0,
                             });
 
@@ -85,9 +85,9 @@ export async function register(req, res) {
                             user.save()
                                 .then(result => res.status(201).send({ msg: "User Register Successfully" }))
                                 .catch(error => res.status(500).send({ error }));
-                            req.app.locals.OTP = otpGenerator.generate(6, { lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false })
-                            let text = `Welcome you to join with us, here your OTP ${req.app.locals.OTP}.`;
-                            sendMail(username, email, text, "Registration OTP");
+                            // req.app.locals.OTP = otpGenerator.generate(6, { lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false })
+                            // let text = `Welcome you to join with us, here your OTP ${req.app.locals.OTP}.`;
+                            // sendMail(username, email, text, "Registration OTP");
                             // let text = `Your Password Recovery OTP is ${code}. Verify and recover your password.`;
                             // let subject = "Password Recovery OTP";                         
                         }).catch(error => {
@@ -131,7 +131,7 @@ export async function login(req, res) {
                         const token = jwt.sign({
                             userId: user._id,
                             username: user.username
-                        }, ENV.JWT_SECRET, { expiresIn: "24h" });
+                        }, ENV.JWT_SECRET, { expiresIn: "1h" });
                         if (user.isActive == 1) {
                             return res.status(200).send({
                                 msg: "Login Successful...!",
@@ -243,19 +243,48 @@ export async function updateUser(req, res) {
     }
 }
 export async function updateUser_1(req, res) {
-    const id = req.params.id
+    const id = req.params.id;
     const {
-        username,
-        email,
         roleId
-    } = req.body
+    } = req.body;
 
     try {
-        const updateUser = await UserModel.findById(id);
-        updateUser.username = username ?? updateUser.username;
-        updateUser.email = email ?? updateUser.email;
-        updateUser.roleId = roleId ?? updateUser.roleId;
         debugger
+        console.log(roleId);
+        const updateUser = await UserModel.findById(id);
+        updateUser.roleId = roleId ?? updateUser.roleId;
+        await updateUser.save();
+        res.status(200).json(updateUser)
+    } catch (error) {
+        res.status(500).json({
+            msg: "Failed"
+        })
+    }
+
+}
+export async function disableUser(req, res) {
+    const id = req.params.id;
+
+    try {
+
+        const updateUser = await UserModel.findById(id);
+        updateUser.isActive = 0;
+        await updateUser.save();
+        res.status(200).json(updateUser)
+    } catch (error) {
+        res.status(500).json({
+            msg: "Failed"
+        })
+    }
+
+}
+export async function ableUser(req, res) {
+    const id = req.params.id;
+
+    try {
+
+        const updateUser = await UserModel.findById(id);
+        updateUser.isActive = 1;
         await updateUser.save();
         res.status(200).json(updateUser)
     } catch (error) {
@@ -282,8 +311,15 @@ export async function deleteUser(req, res) {
 
 /** GET: http://localhost:8080/api/generateOTP */
 export async function generateOTP(req, res) {
+    clearTimeout(req.app.locals.timeoutOTP);
     req.app.locals.OTP = await otpGenerator.generate(6, { lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false })
-    res.status(201).send({code : req.app.locals.OTP})
+    res.status(201).send({ code: req.app.locals.OTP })
+    req.app.locals.timeoutOTP = setTimeout(() => {
+        console.log('Expired !!!');
+        req.app.locals.OTP = null; // reset the OTP value
+        req.app.locals.resetSession = true; // start session for reset password
+    }, "60000");
+
 }
 
 
@@ -293,6 +329,7 @@ export async function verifyOTP(req, res) {
     if (parseInt(req.app.locals.OTP) === parseInt(code)) {
         req.app.locals.OTP = null; // reset the OTP value
         req.app.locals.resetSession = true; // start session for reset password
+        clearTimeout(req.app.locals.timeoutOTP);
         return res.status(201).send({ msg: 'Verify Successsfully!' })
     }
     return res.status(400).send({ error: "Invalid OTP" });
@@ -390,10 +427,10 @@ export async function getAllUser(req, res) {
     }
 
 }
-export async function studentInGrade(req,res){
+export async function studentInGrade(req, res) {
     const gradeId = req.params.gradeId
     try {
-        const students = await UserModel.find({grade : gradeId})
+        const students = await UserModel.find({ grade: gradeId })
         res.status(200).json(students);
     } catch (error) {
         res.status(404).json({ message: error.message });

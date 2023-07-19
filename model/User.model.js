@@ -7,6 +7,9 @@ export const UserSchema = new mongoose.Schema({
         required: [true, "Please provide unique Username"],
         unique: [true, "Username Exist"]
     },
+    fullName: {
+        type: String,
+    },
     password: {
         type: String,
         required: [true, "Please provide a password"],
@@ -29,9 +32,9 @@ export const UserSchema = new mongoose.Schema({
     profile: { type: String },
     roleId: {
         type: Number,
-        default: 1,
+        default : 1,
         enum: {
-
+           
             values: [1, 2, 3, 4],
             message: '{VALUE} is not supported'
         },
@@ -39,7 +42,7 @@ export const UserSchema = new mongoose.Schema({
     },
     isActive: {
         type: Number,
-        default: 0,
+        default : 0,
         enum: {
             values: [0, 1],
             message: '{VALUE} is not supported'
